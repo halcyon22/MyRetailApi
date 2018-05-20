@@ -17,6 +17,7 @@ public class PriceDto {
 
 	@JsonProperty("value")
 	private final BigDecimal price;
+	@JsonProperty("currency_code")
 	private final Currency currency;
 	
 	public static PriceDto fromPrice(Price price) {

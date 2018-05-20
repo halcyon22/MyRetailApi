@@ -1,0 +1,17 @@
+{"properties": [
+  {
+    "name": "redsky.v2.uri",
+    "type": "java.lang.String",
+    "description": "RedSky V2 URL base"
+  },
+  {
+    "name": "redsky.v2.connect.timeout.ms",
+    "type": "java.lang.String",
+    "description": "HTTP connection timeout for RedSky V2 calls"
+  },
+  {
+    "name": "redsky.v2.read.timeout.ms",
+    "type": "java.lang.String",
+    "description": "Read timeout for RedSky V2 calls"
+  }
+]}

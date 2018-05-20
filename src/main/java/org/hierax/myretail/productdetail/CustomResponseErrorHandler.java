@@ -12,10 +12,13 @@ import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.ResponseErrorHandler;
 
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Customizes handling of failed RestTemplate calls. 
+ */
 @Component
-@Log4j2
+@Slf4j
 public class CustomResponseErrorHandler implements ResponseErrorHandler {
 
 	private static final List<HttpStatus.Series> ERROR_STATUS_SERIES = Arrays.asList(HttpStatus.Series.CLIENT_ERROR,
@@ -40,9 +43,12 @@ public class CustomResponseErrorHandler implements ResponseErrorHandler {
 	}
 
 	private String streamToString(InputStream inputStream) {
-		String text = null;
+		String text = "";
 	    try (Scanner scanner = new Scanner(inputStream, StandardCharsets.UTF_8.name())) {
-	        text = scanner.useDelimiter("\\A").next();
+	    	scanner.useDelimiter("\\A");
+	    	if (scanner.hasNext()) {
+	    		text = scanner.next();
+	    	}
 	    }
 	    return text;
 	}

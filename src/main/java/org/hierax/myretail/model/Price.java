@@ -8,6 +8,9 @@ import org.springframework.data.annotation.Id;
 
 import lombok.Data;
 
+/**
+ * Simple retail product price.
+ */
 @Data
 public class Price {
 

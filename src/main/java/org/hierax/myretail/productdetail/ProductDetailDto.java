@@ -6,6 +6,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Product detail data from an external API.
+ */
 @Data
 @NoArgsConstructor
 public class ProductDetailDto {

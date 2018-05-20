@@ -8,10 +8,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Client for the RedSky V2 API.
+ */
 @Service
 @RequiredArgsConstructor
 class RedSkyV2ApiClient {
@@ -43,12 +47,18 @@ class RedSkyV2ApiClient {
 				.build();
 	}
 	
+	/**
+	 * Calls RedSky for product details for the given ID.
+	 * @throws ApiClientException if anything goes wrong talking to RedSky.
+	 */
 	Optional<ProductDetailDto> findProduct(long productId) {
 		ResponseEntity<ProductDetailDto> responseEntity;
 		try {
 			responseEntity = restTemplate.getForEntity(PATH_TEMPLATE, ProductDetailDto.class, productId);
 		} catch (ResourceNotFoundException e) {
 			return Optional.empty();
+		} catch (ResourceAccessException e) {
+			throw new ApiClientException(e);
 		}
 		
 		ProductDetailDto productDetail = responseEntity.getBody();

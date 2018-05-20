@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Product-related REST API endpoints.
+ */
 @RestController
 @RequiredArgsConstructor
 public class ProductController {

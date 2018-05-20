@@ -6,6 +6,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Data;
 
+/**
+ * Product data for API response.
+ */
 @Data
 public class ProductDto {
 

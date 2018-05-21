@@ -1,0 +1,20 @@
+version: "3"
+services:
+    web:
+        image: mpartridge/myretailapi:latest
+        restart: unless-stopped
+        ports:
+            - "8080:8080"
+        environment:
+            SPRING_PROFILES_ACTIVE: compose
+    mongo:
+        image: mongo:3.6
+        restart: unless-stopped
+        volumes:
+            - mongodata:/data/db
+            - ./docker/mongodb_init:/docker-entrypoint-initdb.d
+        environment:
+            MONGO_INITDB_DATABASE: myretail
+
+volumes:
+    mongodata:

@@ -8,6 +8,7 @@ import org.hierax.myretail.service.ProductService;
 import org.hierax.myretail.service.ServiceLayerException;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
@@ -18,20 +19,19 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequiredArgsConstructor
 public class ProductController {
-	
+
 	private final ProductService productService;
-	
-	@RequestMapping("/products/{id}")
+
+	@RequestMapping(path = "/products/{id}", method = RequestMethod.GET)
 	public ProductDto product(
-			@PathVariable(name="id", required=true) long productId
-			) throws NotFoundException, ServiceLayerException {
+			@PathVariable(name = "id", required = true) long productId)
+			throws NotFoundException, ServiceLayerException {
 		Optional<Product> product = productService.findByProductId(productId);
 		if (product.isPresent()) {
 			return ProductDto.fromProduct(product.get());
-		}
-		else {
+		} else {
 			throw new NotFoundException(Long.toString(productId));
 		}
 	}
-	
+
 }

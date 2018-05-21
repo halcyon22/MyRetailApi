@@ -22,3 +22,6 @@ Target Recruiting case study.
 	}]
 }
 ```
+
+### Add HATEOAS Support
+https://spring.io/guides/gs/rest-hateoas/

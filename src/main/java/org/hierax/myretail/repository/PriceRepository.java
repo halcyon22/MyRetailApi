@@ -6,6 +6,6 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 /**
  * CRUD for product prices.
  */
-public interface PriceRepository extends MongoRepository<Price, Long>, CustomPriceRepository {
+public interface PriceRepository extends MongoRepository<Price, String>, CustomPriceRepository {
 
 }

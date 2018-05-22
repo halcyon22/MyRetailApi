@@ -1,6 +1,7 @@
 package org.hierax.myretail.service;
 
 import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
@@ -17,9 +18,12 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ProductServiceTest {
+
+	private static final Currency USD = Currency.getInstance("USD");
 
 	private ProductService service;
 	
@@ -31,6 +35,8 @@ public class ProductServiceTest {
 	@Before
 	public void setup() {
 		service = new ProductService(productDetailService, priceService);
+		ReflectionTestUtils.setField(service, "defaultCurrencyCode", "USD", String.class);
+		ReflectionTestUtils.invokeMethod(service, "init", (Object[])null);
 	}
 
 	@Test
@@ -50,7 +56,7 @@ public class ProductServiceTest {
 		ProductDetailDto productDetail = new ProductDetailDto("Bob's Burgers");
 		when(productDetailService.findProductDetail(productId)).thenReturn(Optional.of(productDetail));
 		
-		when(priceService.findCurrentPrice(productId)).thenReturn(Optional.empty());
+		when(priceService.findCurrentPrice(productId, USD)).thenReturn(Optional.empty());
 		
 		Optional<Product> product = service.findByProductId(productId);
 		assertEquals("Bob's Burgers", product.get().getName());
@@ -73,7 +79,7 @@ public class ProductServiceTest {
 		ProductDetailDto productDetail = new ProductDetailDto("Bob's Burgers");
 		when(productDetailService.findProductDetail(productId)).thenReturn(Optional.of(productDetail));
 		
-		when(priceService.findCurrentPrice(productId)).thenThrow(ServiceLayerException.class);
+		when(priceService.findCurrentPrice(productId, USD)).thenThrow(ServiceLayerException.class);
 		
 		service.findByProductId(productId);
 	}
@@ -87,8 +93,8 @@ public class ProductServiceTest {
 		when(productDetailService.findProductDetail(productId)).thenReturn(Optional.of(productDetail));
 		
 		BigDecimal expectedPrice = new BigDecimal(5);
-		Price price = new Price(123, LocalDate.parse("2018-01-01"), expectedPrice, Currency.getInstance("USD"));
-		when(priceService.findCurrentPrice(productId)).thenReturn(Optional.of(price));
+		Price price = new Price(123, LocalDate.parse("2018-01-01"), expectedPrice, USD);
+		when(priceService.findCurrentPrice(productId, USD)).thenReturn(Optional.of(price));
 		
 		Optional<Product> product = service.findByProductId(productId);
 		assertEquals(expectedName, product.get().getName());

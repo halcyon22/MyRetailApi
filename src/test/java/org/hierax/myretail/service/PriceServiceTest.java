@@ -21,6 +21,8 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class PriceServiceTest {
 
+	private static final Currency USD = Currency.getInstance("USD");
+
 	private PriceService service;
 
 	@Mock
@@ -33,30 +35,30 @@ public class PriceServiceTest {
 
 	@Test
 	public void findCurrentPrice_found() throws Exception {
-		Price price = new Price(123, LocalDate.parse("2018-01-01"), new BigDecimal(5), Currency.getInstance("USD"));
+		Price price = new Price(123, LocalDate.parse("2018-01-01"), new BigDecimal(5), USD);
 
-		when(priceRepository.findByProductIdAndCurrency(eq(1234L), any(), eq(Currency.getInstance("USD"))))
+		when(priceRepository.findByProductIdAndCurrency(eq(1234L), any(), eq(USD)))
 		.thenReturn(Optional.of(price));
 
-		Optional<Price> actual = service.findCurrentPrice(1234);
+		Optional<Price> actual = service.findCurrentPrice(1234, USD);
 		assertEquals(price, actual.get());
 	}
 
 	@Test
 	public void findCurrentPrice_notFound() throws Exception {
-		when(priceRepository.findByProductIdAndCurrency(eq(1234L), any(), eq(Currency.getInstance("USD"))))
+		when(priceRepository.findByProductIdAndCurrency(eq(1234L), any(), eq(USD)))
 				.thenReturn(Optional.empty());
 
-		Optional<Price> price = service.findCurrentPrice(1234);
+		Optional<Price> price = service.findCurrentPrice(1234, USD);
 		assertFalse("Price should not be present", price.isPresent());
 	}
 
 	@Test(expected=ServiceLayerException.class)
 	public void findCurrentPrice_exception() throws Exception {
-		when(priceRepository.findByProductIdAndCurrency(eq(1234L), any(), eq(Currency.getInstance("USD"))))
+		when(priceRepository.findByProductIdAndCurrency(eq(1234L), any(), eq(USD)))
 		.thenThrow(RepositoryException.class);
 
-		service.findCurrentPrice(1234);
+		service.findCurrentPrice(1234, USD);
 	}
 	
 }

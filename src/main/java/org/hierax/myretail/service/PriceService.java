@@ -17,22 +17,21 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class PriceService {
-	
-	private static final Currency DEFAULT_CURRENCY = Currency.getInstance("USD");
 
 	private final PriceRepository priceRepository;
-	
+
 	/**
-	 * Loads the current price data in USD for the given product.
+	 * Loads the current price data for the given product and currency.
 	 * 
-	 * @throws ServiceLayerException if anything goes wrong talking to the repository.
+	 * @throws ServiceLayerException
+	 *             if anything goes wrong talking to the repository.
 	 */
-	public Optional<Price> findCurrentPrice(long productId) throws ServiceLayerException {
+	public Optional<Price> findCurrentPrice(long productId, Currency currency) throws ServiceLayerException {
 		try {
-			return priceRepository.findByProductIdAndCurrency(productId, LocalDate.now(), DEFAULT_CURRENCY);
+			return priceRepository.findByProductIdAndCurrency(productId, LocalDate.now(), currency);
 		} catch (RepositoryException e) {
 			throw new ServiceLayerException(e);
 		}
 	}
-	
+
 }

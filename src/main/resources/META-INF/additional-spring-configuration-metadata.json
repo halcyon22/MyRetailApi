@@ -13,5 +13,10 @@
     "name": "redsky.v2.read.timeout.ms",
     "type": "java.lang.String",
     "description": "Read timeout for RedSky V2 calls"
+  },
+  {
+    "name": "myretail.currency.default",
+    "type": "java.lang.String",
+    "description": "Default currency"
   }
 ]}

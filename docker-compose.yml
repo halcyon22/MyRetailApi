@@ -12,7 +12,7 @@ services:
         restart: unless-stopped
         volumes:
             - mongodata:/data/db
-            - ./docker/mongodb_init:/docker-entrypoint-initdb.d
+            - ./mongodb_init:/docker-entrypoint-initdb.d
         environment:
             MONGO_INITDB_DATABASE: myretail
 

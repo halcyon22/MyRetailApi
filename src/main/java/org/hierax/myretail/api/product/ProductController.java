@@ -23,7 +23,7 @@ public class ProductController {
 	private final ProductService productService;
 
 	@RequestMapping(path = "/products/{id}", method = RequestMethod.GET)
-	public ProductDto product(
+	public ProductDto getProduct(
 			@PathVariable(name = "id", required = true) long productId)
 			throws NotFoundException, ServiceLayerException {
 		Optional<Product> product = productService.findByProductId(productId);

@@ -14,7 +14,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ProductDetailService {
 
-	private final RedSkyV2ApiClient redSkyV2ApiClient; // TODO configure injection via profile
+	private final RedSkyV2ApiClient redSkyV2ApiClient;
 	
 	/**
 	 * Loads product details for the given ID from an external system.

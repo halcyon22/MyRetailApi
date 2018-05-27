@@ -7,6 +7,7 @@ import org.hierax.myretail.model.Product;
 import org.hierax.myretail.service.ProductService;
 import org.hierax.myretail.service.ServiceLayerException;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -34,4 +35,17 @@ public class ProductController {
 		}
 	}
 
+	@RequestMapping(path = "/products/{id}", method = RequestMethod.PUT)
+	public ProductDto updatePrice(
+			@PathVariable(name = "id", required = true) long productId,
+			@RequestBody ProductDto transientProduct)
+			throws NotFoundException, ServiceLayerException {
+		Optional<Product> product = productService.updatePrice(productId, transientProduct.getCurrentPrice().getPrice());
+		if (product.isPresent()) {
+			return ProductDto.fromProduct(product.get());
+		} else {
+			throw new NotFoundException(Long.toString(productId));
+		}
+	}
+	
 }

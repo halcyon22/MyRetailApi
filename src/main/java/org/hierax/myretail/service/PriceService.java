@@ -1,5 +1,6 @@
 package org.hierax.myretail.service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Currency;
 import java.util.Optional;
@@ -7,6 +8,7 @@ import java.util.Optional;
 import org.hierax.myretail.model.Price;
 import org.hierax.myretail.repository.PriceRepository;
 import org.hierax.myretail.repository.RepositoryException;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -30,6 +32,25 @@ public class PriceService {
 		try {
 			return priceRepository.findByProductIdAndCurrency(productId, LocalDate.now(), currency);
 		} catch (RepositoryException e) {
+			throw new ServiceLayerException(e);
+		}
+	}
+
+	/**
+	 * Add or update the price for the given product in the given currency.
+	 * 
+	 * @return the saved Price
+	 * @throws ServiceLayerException
+	 *             if anything goes wrong talking to the repository.
+	 */
+	public Price updatePrice(long productId, BigDecimal price, Currency currency) throws ServiceLayerException {
+		try {
+
+			// TODO look it up and save
+			Price transientPrice = new Price(productId, LocalDate.now(), price, currency);
+			Price savedPrice = priceRepository.save(transientPrice);
+			return savedPrice;
+		} catch (DataAccessException e) {
 			throw new ServiceLayerException(e);
 		}
 	}

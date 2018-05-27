@@ -100,4 +100,55 @@ public class ProductServiceTest {
 		assertEquals(expectedPrice, product.get().getCurrentPrice().getPrice());
 	}
 	
+	@Test
+	public void updatePrice_noDetails() throws Exception {
+		long productId = 1234L;
+		
+		when(productDetailService.findProductDetail(productId)).thenReturn(Optional.empty());
+		
+		Optional<Product> product = service.updatePrice(productId, new BigDecimal("1.99"));
+		assertFalse("Product should be missing", product.isPresent());
+	}
+
+	@Test(expected=ServiceLayerException.class)
+	public void updatePrice_productDetailException() throws Exception {
+		long productId = 1234L;
+		
+		when(productDetailService.findProductDetail(productId)).thenThrow(ServiceLayerException.class);
+		
+		service.findByProductId(productId);
+	}
+
+	@Test(expected=ServiceLayerException.class)
+	public void updatePrice_priceException() throws Exception {
+		long productId = 1234L;
+		BigDecimal price = new BigDecimal("1.99");
+		
+		ProductDetailDto productDetail = new ProductDetailDto("Bob's Burgers");
+		when(productDetailService.findProductDetail(productId)).thenReturn(Optional.of(productDetail));
+		
+		when(priceService.updatePrice(productId, price, USD)).thenThrow(ServiceLayerException.class);
+		
+		service.updatePrice(productId, price);
+	}
+
+	@Test
+	public void updatePrice() throws Exception {
+		long productId = 1234L;
+		
+		String expectedName = "Bob's Burgers";
+		ProductDetailDto productDetail = new ProductDetailDto(expectedName);
+		when(productDetailService.findProductDetail(productId)).thenReturn(Optional.of(productDetail));
+		
+		BigDecimal expectedPrice = new BigDecimal("1.99");
+		Currency expectedCurrency = USD;
+		Price price = new Price(productId, LocalDate.now(), expectedPrice, expectedCurrency);
+		when(priceService.updatePrice(productId, expectedPrice, expectedCurrency)).thenReturn(price);		
+
+		Optional<Product> product = service.updatePrice(productId, expectedPrice);
+		assertEquals(expectedName, product.get().getName());
+		assertEquals(expectedPrice, product.get().getCurrentPrice().getPrice());
+		assertEquals(expectedCurrency, product.get().getCurrentPrice().getCurrency());
+	}
+	
 }

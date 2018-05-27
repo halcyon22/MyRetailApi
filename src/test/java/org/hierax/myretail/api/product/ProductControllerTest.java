@@ -2,8 +2,8 @@ package org.hierax.myretail.api.product;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.math.BigDecimal;
@@ -20,6 +20,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
@@ -47,7 +48,6 @@ public class ProductControllerTest {
 		when(productService.findByProductId(productId)).thenReturn(Optional.empty());
 				
         this.mockMvc.perform(get("/products/"+productId))
-        .andDo(print())
         .andExpect(status().isNotFound())
         .andExpect(content().string(containsString(
         		"No resource found with id " + productId
@@ -62,7 +62,6 @@ public class ProductControllerTest {
 		when(productService.findByProductId(productId)).thenThrow(ServiceLayerException.class);
 		
         this.mockMvc.perform(get("/products/"+productId))
-        .andDo(print())
         .andExpect(status().isInternalServerError())
         .andExpect(content().string(containsString(
         		"An internal error has occurred. Check the application logs for details"
@@ -74,20 +73,102 @@ public class ProductControllerTest {
 	public void getProduct() throws Exception {
 		long productId = 1234;
 		
-		Product product = new Product(productId);
-		product.setName("Westworld Season 2");
-		product.setCurrentPrice(
-				new Price(productId, LocalDate.now(), new BigDecimal("7.99"), Currency.getInstance("USD")));
+		Product product = createProduct();
 		when(productService.findByProductId(productId)).thenReturn(Optional.of(product));
 		
 		String detailsString = objectMapper.writeValueAsString(ProductDto.fromProduct(product));
 		
         this.mockMvc.perform(get("/products/"+productId))
-        .andDo(print())
         .andExpect(status().isOk())
         .andExpect(content().string(containsString(
         		detailsString
 		)));
+	}
+
+	@Test
+	@WithMockUser
+    public void updatePrice_noCsrf() throws Exception {
+		long productId = 1234;
+		
+		this.mockMvc.perform(put("/products/"+productId)
+				.contentType(MediaType.APPLICATION_JSON)
+                .content("irrelevant")
+          )
+		.andExpect(status().isForbidden());
+    }
+
+	@Test
+	@WithMockUser
+    public void updatePrice_notFound() throws Exception {
+		long productId = 1234;
+
+		Product product = createProduct();
+		String detailsString = objectMapper.writeValueAsString(ProductDto.fromProduct(product));
+
+		this.mockMvc.perform(put("/products/"+productId)
+				.contentType(MediaType.APPLICATION_JSON)
+                .content(detailsString)
+                .with(csrf())
+          )
+        .andExpect(status().isNotFound())
+        .andExpect(content().string(containsString(
+        		"No resource found with id " + productId
+		)));
+    }
+
+	@Test
+	@WithMockUser
+    public void updatePrice_serviceLayerException() throws Exception {
+		long productId = 1234;
+
+		Product product = createProduct();
+		String detailsString = objectMapper.writeValueAsString(ProductDto.fromProduct(product));
+
+		when(productService.updatePrice(productId, product.getCurrentPrice().getPrice()))
+				.thenThrow(ServiceLayerException.class);
+
+		this.mockMvc.perform(put("/products/"+productId)
+				.contentType(MediaType.APPLICATION_JSON)
+                .content(detailsString)
+                .with(csrf())
+          )
+        .andExpect(status().isInternalServerError())
+        .andExpect(content().string(containsString(
+        		"An internal error has occurred. Check the application logs for details"
+		)));
+    }
+
+	@Test
+	@WithMockUser
+    public void updatePrice() throws Exception {
+		long productId = 1234;
+		
+		Product product = createProduct();
+		when(productService.updatePrice(productId, product.getCurrentPrice().getPrice()))
+				.thenReturn(Optional.of(product));
+
+		String detailsString = objectMapper.writeValueAsString(ProductDto.fromProduct(product));
+
+		this.mockMvc.perform(put("/products/"+productId)
+				.contentType(MediaType.APPLICATION_JSON)
+                .content(detailsString)
+                .with(csrf())
+          )
+        .andExpect(status().isOk())
+        .andExpect(content().string(containsString(
+        		detailsString
+		)));
+    }
+	
+	private Product createProduct() {
+		long productId = 1234;
+		
+		Product product = new Product(productId);
+		product.setName("Westworld Season 2");
+		product.setCurrentPrice(
+				new Price(productId, LocalDate.now(), new BigDecimal("7.99"), Currency.getInstance("USD")));
+		
+		return product;
 	}
 	
 }

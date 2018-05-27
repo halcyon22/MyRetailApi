@@ -1,5 +1,6 @@
 package org.hierax.myretail.service;
 
+import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.Optional;
 
@@ -25,7 +26,7 @@ public class ProductService {
 
 	private final ProductDetailService productDetailService;
 	private final PriceService priceService;
-
+	
 	@Value("${myretail.currency.default}")
 	private String defaultCurrencyCode;
 	private Currency defaultCurrency;
@@ -51,6 +52,31 @@ public class ProductService {
 			Product product = new Product(productId);
 			product.setName(productDetail.get().getTitle());
 			product.setCurrentPrice(price.orElse(null));
+			
+			return Optional.of(product);
+		}
+		else {
+			return Optional.empty();
+		}
+	}
+	
+	/**
+	 * Add or update the price for the given product in the given currency.
+	 * 
+	 * @return
+	 * @throws ServiceLayerException
+	 */
+	public Optional<Product> updatePrice(long productId, BigDecimal price)
+			throws ServiceLayerException {
+		Optional<ProductDetailDto> productDetail = productDetailService.findProductDetail(productId);
+		if (productDetail.isPresent()) {
+			log.info("Found product detail: {}", productDetail);
+
+			Price savedPrice = priceService.updatePrice(productId, price, defaultCurrency);
+			
+			Product product = new Product(productId);
+			product.setName(productDetail.get().getTitle());
+			product.setCurrentPrice(savedPrice);
 			
 			return Optional.of(product);
 		}

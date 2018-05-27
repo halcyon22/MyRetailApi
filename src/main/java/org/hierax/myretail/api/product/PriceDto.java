@@ -5,20 +5,27 @@ import java.util.Currency;
 
 import org.hierax.myretail.model.Price;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 /**
  * Price data for API response.
  */
-@Data
+@Data @AllArgsConstructor
 public class PriceDto {
 
+	// TODO validation
+	
 	@JsonProperty("value")
-	private final BigDecimal price;
+	private BigDecimal price;
 	@JsonProperty("currency_code")
-	private final Currency currency;
+	private Currency currency;
+	
+	@JsonCreator
+	public PriceDto() {} 
 	
 	public static PriceDto fromPrice(Price price) {
 		if (price == null) return null;

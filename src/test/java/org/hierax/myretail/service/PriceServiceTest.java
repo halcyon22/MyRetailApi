@@ -16,7 +16,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 
 @RunWith(MockitoJUnitRunner.class)
 public class PriceServiceTest {
@@ -27,6 +29,8 @@ public class PriceServiceTest {
 
 	@Mock
 	private PriceRepository priceRepository;
+	@Spy
+	private FakePriceRepository priceRepositorySpy;
 
 	@Before
 	public void setup() {
@@ -59,6 +63,38 @@ public class PriceServiceTest {
 		.thenThrow(RepositoryException.class);
 
 		service.findCurrentPrice(1234, USD);
+	}
+	
+	@Test
+	public void updatePrice() throws Exception {
+		long expectedProductId = 1234;
+		BigDecimal expectedPrice = new BigDecimal("1.99");
+		Currency expectedCurrency = USD;
+		
+		PriceService serviceWithSpy = new PriceService(priceRepositorySpy);
+		Price actual = serviceWithSpy.updatePrice(expectedProductId, expectedPrice, expectedCurrency);
+
+		assertEquals(expectedProductId, priceRepositorySpy.price.getProductId());
+		assertEquals(expectedPrice, priceRepositorySpy.price.getPrice());
+		assertEquals(expectedCurrency, priceRepositorySpy.price.getCurrency());
+		
+		assertEquals(priceRepositorySpy.price, actual);
+	}
+
+	@Test(expected=ServiceLayerException.class)
+	public void updatePrice_exception() throws Exception {
+		when(priceRepository.save(any())).thenThrow(InvalidMongoDbApiUsageException.class);
+
+		service.updatePrice(1234L, new BigDecimal("1.99"), USD);
+	}
+	
+	static abstract class FakePriceRepository implements PriceRepository {
+		Price price;		
+		@Override
+		public <S extends Price> S save(S entity) {
+			price = entity;
+			return entity;
+		}
 	}
 	
 }

@@ -82,4 +82,30 @@ public class PriceRepositoryTest {
 		assertFalse(String.format("Price should be empty but was %s", price.toString()), price.isPresent());
 	}
 
+	@Test
+	public void save() {
+		BigDecimal expectedPrice = new BigDecimal("1.99");
+		Price newPrice = repository.save(
+				new Price(100, LocalDate.parse("2000-01-01"), expectedPrice, USD));
+		String id = newPrice.getId();
+		
+		Optional<Price> retrievedPrice = repository.findById(id);
+		assertEquals(expectedPrice, retrievedPrice.get().getPrice());
+	}
+
+	@Test
+	public void save_updateExisting() {
+		Price newPrice = repository.save(
+				new Price(200, LocalDate.parse("2000-01-01"), new BigDecimal("1.99"), USD));
+		String id = newPrice.getId();
+		 
+		BigDecimal expectedPrice = new BigDecimal("1.98");
+		newPrice.setPrice(expectedPrice);
+		Price savedPrice = repository.save(newPrice);
+		assertEquals(id, savedPrice.getId());
+		
+		Optional<Price> retrievedPrice = repository.findById(id);
+		assertEquals(expectedPrice, retrievedPrice.get().getPrice());
+	}
+	
 }

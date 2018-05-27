@@ -18,8 +18,15 @@ public class Price {
 	private String id;
 	
 	private final long productId;
-	private final LocalDate startDate;
-	private final BigDecimal price;
-	private final Currency currency;
+	private LocalDate startDate;
+	private BigDecimal price;
+	private Currency currency;
+	
+	public Price(long productId, LocalDate startDate, BigDecimal price, Currency currency) {
+		this.productId = productId;
+		this.startDate = startDate;
+		this.price = price;
+		this.currency = currency;
+	}
 	
 }

@@ -71,23 +71,6 @@ I use `@SpringBootTest` on `PriceRepositoryTest` in order to get a `PriceReposit
 
 - https://dzone.com/articles/spring-boot-with-embedded-mongodb 
 
-### Replace existing Price storage
-This is my first time designing a document datasource, and right now it's implemented in a row-centric fashion. Putting all price info inside a single document per product would make more sense, but an even more efficient solution might be for each document to store product prices in a single currency, because most of the time you would probably be looking for prices for a specific currency, so the document could be indexed on `productId` and `currency_code`.
-
-```
-{
-	"productId": 1,
-	"currency_code": "USD",
-	"prices": [{
-		"start_date": "1900-01-01",
-		"price": 15.99
-	},{
-		"start_date": "2018-01-01",
-		"price": 12.99
-	}]
-}
-```
-
 ### Abstract Product Details datasource
 1. Create a `ProductDetailsApiClient` interface.
 1. Make `RedSkyApiClient` implement it.

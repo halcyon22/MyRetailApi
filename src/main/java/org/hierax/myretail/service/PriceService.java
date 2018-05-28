@@ -1,7 +1,6 @@
 package org.hierax.myretail.service;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.Currency;
 import java.util.Optional;
 
@@ -23,14 +22,14 @@ public class PriceService {
 	private final PriceRepository priceRepository;
 
 	/**
-	 * Loads the current price data for the given product and currency.
+	 * Loads the current price data for the given product.
 	 * 
 	 * @throws ServiceLayerException
 	 *             if anything goes wrong talking to the repository.
 	 */
-	public Optional<Price> findCurrentPrice(long productId, Currency currency) throws ServiceLayerException {
+	public Optional<Price> findCurrentPrice(long productId) throws ServiceLayerException {
 		try {
-			return priceRepository.findByProductIdAndCurrency(productId, LocalDate.now(), currency);
+			return priceRepository.findByProductId(productId);
 		} catch (RepositoryException e) {
 			throw new ServiceLayerException(e);
 		}
@@ -43,12 +42,13 @@ public class PriceService {
 	 * @throws ServiceLayerException
 	 *             if anything goes wrong talking to the repository.
 	 */
-	public Price updatePrice(long productId, BigDecimal price, Currency currency) throws ServiceLayerException {
+	public Price updatePrice(long productId, Currency currency, BigDecimal price) throws ServiceLayerException {
 		try {
-
-			// TODO look it up and save
-			Price transientPrice = new Price(productId, LocalDate.now(), price, currency);
-			Price savedPrice = priceRepository.save(transientPrice);
+			Optional<Price> existingPrice = priceRepository.findByProductId(productId);
+			Price toSave = existingPrice.orElse(Price.forSingleCurrency(productId, currency, price));
+			toSave.setPrice(currency, price);
+			
+			Price savedPrice = priceRepository.save(toSave);
 			return savedPrice;
 		} catch (DataAccessException e) {
 			throw new ServiceLayerException(e);

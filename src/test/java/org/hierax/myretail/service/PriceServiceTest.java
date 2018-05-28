@@ -5,7 +5,6 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.Currency;
 import java.util.Optional;
 
@@ -39,30 +38,29 @@ public class PriceServiceTest {
 
 	@Test
 	public void findCurrentPrice_found() throws Exception {
-		Price price = new Price(123, LocalDate.parse("2018-01-01"), new BigDecimal(5), USD);
-
-		when(priceRepository.findByProductIdAndCurrency(eq(1234L), any(), eq(USD)))
+		Price price = Price.forSingleCurrency(1234, USD, new BigDecimal(5));
+		when(priceRepository.findByProductId(1234))
 		.thenReturn(Optional.of(price));
 
-		Optional<Price> actual = service.findCurrentPrice(1234, USD);
+		Optional<Price> actual = service.findCurrentPrice(1234);
 		assertEquals(price, actual.get());
 	}
 
 	@Test
 	public void findCurrentPrice_notFound() throws Exception {
-		when(priceRepository.findByProductIdAndCurrency(eq(1234L), any(), eq(USD)))
-				.thenReturn(Optional.empty());
+		when(priceRepository.findByProductId(1234))
+		.thenReturn(Optional.empty());
 
-		Optional<Price> price = service.findCurrentPrice(1234, USD);
+		Optional<Price> price = service.findCurrentPrice(1234);
 		assertFalse("Price should not be present", price.isPresent());
 	}
 
 	@Test(expected=ServiceLayerException.class)
 	public void findCurrentPrice_exception() throws Exception {
-		when(priceRepository.findByProductIdAndCurrency(eq(1234L), any(), eq(USD)))
+		when(priceRepository.findByProductId(1234L))
 		.thenThrow(RepositoryException.class);
 
-		service.findCurrentPrice(1234, USD);
+		service.findCurrentPrice(1234);
 	}
 	
 	@Test
@@ -72,11 +70,10 @@ public class PriceServiceTest {
 		Currency expectedCurrency = USD;
 		
 		PriceService serviceWithSpy = new PriceService(priceRepositorySpy);
-		Price actual = serviceWithSpy.updatePrice(expectedProductId, expectedPrice, expectedCurrency);
+		Price actual = serviceWithSpy.updatePrice(expectedProductId, expectedCurrency, expectedPrice);
 
 		assertEquals(expectedProductId, priceRepositorySpy.price.getProductId());
-		assertEquals(expectedPrice, priceRepositorySpy.price.getPrice());
-		assertEquals(expectedCurrency, priceRepositorySpy.price.getCurrency());
+		assertEquals(expectedPrice, priceRepositorySpy.price.getPrice(USD).get());
 		
 		assertEquals(priceRepositorySpy.price, actual);
 	}
@@ -85,7 +82,7 @@ public class PriceServiceTest {
 	public void updatePrice_exception() throws Exception {
 		when(priceRepository.save(any())).thenThrow(InvalidMongoDbApiUsageException.class);
 
-		service.updatePrice(1234L, new BigDecimal("1.99"), USD);
+		service.updatePrice(1234, USD, new BigDecimal("1.99"));
 	}
 	
 	static abstract class FakePriceRepository implements PriceRepository {

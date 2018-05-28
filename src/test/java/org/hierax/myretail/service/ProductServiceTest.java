@@ -4,7 +4,6 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.Currency;
 import java.util.Optional;
 
@@ -17,7 +16,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.test.util.ReflectionTestUtils;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ProductServiceTest {
@@ -34,8 +32,6 @@ public class ProductServiceTest {
 	@Before
 	public void setup() {
 		service = new ProductService(productDetailService, priceService);
-		ReflectionTestUtils.setField(service, "defaultCurrencyCode", "USD", String.class);
-		ReflectionTestUtils.invokeMethod(service, "init", (Object[])null);
 	}
 
 	@Test
@@ -55,7 +51,7 @@ public class ProductServiceTest {
 		ProductDetailDto productDetail = new ProductDetailDto("Bob's Burgers");
 		when(productDetailService.findProductDetail(productId)).thenReturn(Optional.of(productDetail));
 		
-		when(priceService.findCurrentPrice(productId, USD)).thenReturn(Optional.empty());
+		when(priceService.findCurrentPrice(productId)).thenReturn(Optional.empty());
 		
 		Optional<Product> product = service.findByProductId(productId);
 		assertEquals("Bob's Burgers", product.get().getName());
@@ -78,7 +74,7 @@ public class ProductServiceTest {
 		ProductDetailDto productDetail = new ProductDetailDto("Bob's Burgers");
 		when(productDetailService.findProductDetail(productId)).thenReturn(Optional.of(productDetail));
 		
-		when(priceService.findCurrentPrice(productId, USD)).thenThrow(ServiceLayerException.class);
+		when(priceService.findCurrentPrice(productId)).thenThrow(ServiceLayerException.class);
 		
 		service.findByProductId(productId);
 	}
@@ -92,12 +88,12 @@ public class ProductServiceTest {
 		when(productDetailService.findProductDetail(productId)).thenReturn(Optional.of(productDetail));
 		
 		BigDecimal expectedPrice = new BigDecimal(5);
-		Price price = new Price(123, LocalDate.parse("2018-01-01"), expectedPrice, USD);
-		when(priceService.findCurrentPrice(productId, USD)).thenReturn(Optional.of(price));
+		Price price = Price.forSingleCurrency(123, USD, expectedPrice);
+		when(priceService.findCurrentPrice(productId)).thenReturn(Optional.of(price));
 		
 		Optional<Product> product = service.findByProductId(productId);
 		assertEquals(expectedName, product.get().getName());
-		assertEquals(expectedPrice, product.get().getCurrentPrice().getPrice());
+		assertEquals(expectedPrice, product.get().getCurrentPrice().getPrice(USD).get());
 	}
 	
 	@Test
@@ -106,7 +102,7 @@ public class ProductServiceTest {
 		
 		when(productDetailService.findProductDetail(productId)).thenReturn(Optional.empty());
 		
-		Optional<Product> product = service.updatePrice(productId, new BigDecimal("1.99"));
+		Optional<Product> product = service.updatePrice(productId, USD, new BigDecimal("1.99"));
 		assertFalse("Product should be missing", product.isPresent());
 	}
 
@@ -127,9 +123,9 @@ public class ProductServiceTest {
 		ProductDetailDto productDetail = new ProductDetailDto("Bob's Burgers");
 		when(productDetailService.findProductDetail(productId)).thenReturn(Optional.of(productDetail));
 		
-		when(priceService.updatePrice(productId, price, USD)).thenThrow(ServiceLayerException.class);
+		when(priceService.updatePrice(productId, USD, price)).thenThrow(ServiceLayerException.class);
 		
-		service.updatePrice(productId, price);
+		service.updatePrice(productId, USD, price);
 	}
 
 	@Test
@@ -142,13 +138,12 @@ public class ProductServiceTest {
 		
 		BigDecimal expectedPrice = new BigDecimal("1.99");
 		Currency expectedCurrency = USD;
-		Price price = new Price(productId, LocalDate.now(), expectedPrice, expectedCurrency);
-		when(priceService.updatePrice(productId, expectedPrice, expectedCurrency)).thenReturn(price);		
+		Price price = Price.forSingleCurrency(productId, expectedCurrency, expectedPrice);
+		when(priceService.updatePrice(productId, expectedCurrency, expectedPrice)).thenReturn(price);		
 
-		Optional<Product> product = service.updatePrice(productId, expectedPrice);
+		Optional<Product> product = service.updatePrice(productId, expectedCurrency, expectedPrice);
 		assertEquals(expectedName, product.get().getName());
-		assertEquals(expectedPrice, product.get().getCurrentPrice().getPrice());
-		assertEquals(expectedCurrency, product.get().getCurrentPrice().getCurrency());
+		assertEquals(expectedPrice, product.get().getCurrentPrice().getPrice(expectedCurrency).get());
 	}
 	
 }

@@ -7,7 +7,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.Currency;
 import java.util.Optional;
 
@@ -31,11 +30,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @WebMvcTest(ProductController.class)
 public class ProductControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-	
+	private static final Currency USD = Currency.getInstance("USD");
+
+	@Autowired
+	private MockMvc mockMvc;
+
 	@MockBean
-    private ProductService productService;
+	private ProductService productService;
 
 	@Autowired
 	private ObjectMapper objectMapper;
@@ -44,131 +45,107 @@ public class ProductControllerTest {
 	@WithMockUser
 	public void getProduct_notFound() throws Exception {
 		long productId = 1234;
-		
+
 		when(productService.findByProductId(productId)).thenReturn(Optional.empty());
-				
-        this.mockMvc.perform(get("/products/"+productId))
-        .andExpect(status().isNotFound())
-        .andExpect(content().string(containsString(
-        		"No resource found with id " + productId
-		)));
+
+		this.mockMvc.perform(get("/products/" + productId)).andExpect(status().isNotFound())
+				.andExpect(content().string(containsString("No resource found with id " + productId)));
 	}
 
 	@Test
 	@WithMockUser
 	public void getProduct_serviceLayerException() throws Exception {
 		long productId = 1234;
-		
+
 		when(productService.findByProductId(productId)).thenThrow(ServiceLayerException.class);
-		
-        this.mockMvc.perform(get("/products/"+productId))
-        .andExpect(status().isInternalServerError())
-        .andExpect(content().string(containsString(
-        		"An internal error has occurred. Check the application logs for details"
-		)));
+
+		this.mockMvc.perform(get("/products/" + productId)).andExpect(status().isInternalServerError())
+				.andExpect(content().string(
+						containsString("An internal error has occurred. Check the application logs for details")));
 	}
 
 	@Test
 	@WithMockUser
 	public void getProduct() throws Exception {
 		long productId = 1234;
-		
+
 		Product product = createProduct();
 		when(productService.findByProductId(productId)).thenReturn(Optional.of(product));
-		
-		String detailsString = objectMapper.writeValueAsString(ProductDto.fromProduct(product));
-		
-        this.mockMvc.perform(get("/products/"+productId))
-        .andExpect(status().isOk())
-        .andExpect(content().string(containsString(
-        		detailsString
-		)));
+
+		String detailsString = objectMapper.writeValueAsString(ProductDto.fromProduct(product, USD));
+
+		this.mockMvc.perform(get("/products/" + productId)).andExpect(status().isOk())
+				.andExpect(content().string(containsString(detailsString)));
 	}
 
 	@Test
 	@WithMockUser
-    public void updatePrice_noCsrf() throws Exception {
+	public void updatePrice_noCsrf() throws Exception {
 		long productId = 1234;
-		
-		this.mockMvc.perform(put("/products/"+productId)
-				.contentType(MediaType.APPLICATION_JSON)
-                .content("irrelevant")
-          )
-		.andExpect(status().isForbidden());
-    }
+
+		this.mockMvc
+				.perform(put("/products/" + productId).contentType(MediaType.APPLICATION_JSON).content("irrelevant"))
+				.andExpect(status().isForbidden());
+	}
 
 	@Test
 	@WithMockUser
-    public void updatePrice_notFound() throws Exception {
+	public void updatePrice_notFound() throws Exception {
 		long productId = 1234;
 
 		Product product = createProduct();
-		String detailsString = objectMapper.writeValueAsString(ProductDto.fromProduct(product));
+		String detailsString = objectMapper.writeValueAsString(ProductDto.fromProduct(product, USD));
 
-		this.mockMvc.perform(put("/products/"+productId)
-				.contentType(MediaType.APPLICATION_JSON)
-                .content(detailsString)
-                .with(csrf())
-          )
-        .andExpect(status().isNotFound())
-        .andExpect(content().string(containsString(
-        		"No resource found with id " + productId
-		)));
-    }
+		this.mockMvc
+				.perform(put("/products/" + productId).contentType(MediaType.APPLICATION_JSON).content(detailsString)
+						.with(csrf()))
+				.andExpect(status().isNotFound())
+				.andExpect(content().string(containsString("No resource found with id " + productId)));
+	}
 
 	@Test
 	@WithMockUser
-    public void updatePrice_serviceLayerException() throws Exception {
+	public void updatePrice_serviceLayerException() throws Exception {
 		long productId = 1234;
 
 		Product product = createProduct();
-		String detailsString = objectMapper.writeValueAsString(ProductDto.fromProduct(product));
+		String detailsString = objectMapper.writeValueAsString(ProductDto.fromProduct(product, USD));
 
-		when(productService.updatePrice(productId, product.getCurrentPrice().getPrice()))
+		when(productService.updatePrice(productId, USD, product.getCurrentPrice().getPrice(USD).get()))
 				.thenThrow(ServiceLayerException.class);
 
-		this.mockMvc.perform(put("/products/"+productId)
-				.contentType(MediaType.APPLICATION_JSON)
-                .content(detailsString)
-                .with(csrf())
-          )
-        .andExpect(status().isInternalServerError())
-        .andExpect(content().string(containsString(
-        		"An internal error has occurred. Check the application logs for details"
-		)));
-    }
+		this.mockMvc
+				.perform(put("/products/" + productId).contentType(MediaType.APPLICATION_JSON).content(detailsString)
+						.with(csrf()))
+				.andExpect(status().isInternalServerError()).andExpect(content().string(
+						containsString("An internal error has occurred. Check the application logs for details")));
+	}
 
 	@Test
 	@WithMockUser
-    public void updatePrice() throws Exception {
+	public void updatePrice() throws Exception {
 		long productId = 1234;
-		
+
 		Product product = createProduct();
-		when(productService.updatePrice(productId, product.getCurrentPrice().getPrice()))
+		when(productService.updatePrice(productId, USD, product.getCurrentPrice().getPrice(USD).get()))
 				.thenReturn(Optional.of(product));
 
-		String detailsString = objectMapper.writeValueAsString(ProductDto.fromProduct(product));
+		String detailsString = objectMapper.writeValueAsString(ProductDto.fromProduct(product, USD));
 
-		this.mockMvc.perform(put("/products/"+productId)
-				.contentType(MediaType.APPLICATION_JSON)
-                .content(detailsString)
-                .with(csrf())
-          )
-        .andExpect(status().isOk())
-        .andExpect(content().string(containsString(
-        		detailsString
-		)));
-    }
-	
+		this.mockMvc
+				.perform(put("/products/" + productId).contentType(MediaType.APPLICATION_JSON).content(detailsString)
+						.with(csrf()))
+				.andExpect(status().isOk()).andExpect(content().string(containsString(detailsString)));
+	}
+
 	private Product createProduct() {
 		long productId = 1234;
-		
+
 		Product product = new Product(productId);
 		product.setName("Westworld Season 2");
-		product.setCurrentPrice(
-				new Price(productId, LocalDate.now(), new BigDecimal("7.99"), Currency.getInstance("USD")));
-		
+		product.setCurrentPrice(Price.forSingleCurrency(productId, USD, new BigDecimal("7.99")));
+
 		return product;
 	}
-	
+
 }

@@ -27,9 +27,10 @@ public class PriceDto {
 	@JsonCreator
 	public PriceDto() {} 
 	
-	public static PriceDto fromPrice(Price price) {
-		if (price == null) return null;
-		return new PriceDto(price.getPrice(), price.getCurrency());
+	public static PriceDto fromPrice(Price price, Currency currency) {
+		if (price == null || !price.getPrice(currency).isPresent()) return null;
+		
+		return new PriceDto(price.getPrice(currency).get(), currency);
 	}
 	
 }

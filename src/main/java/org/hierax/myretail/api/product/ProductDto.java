@@ -1,5 +1,7 @@
 package org.hierax.myretail.api.product;
 
+import java.util.Currency;
+
 import org.hierax.myretail.model.Product;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -25,7 +27,8 @@ public class ProductDto {
 	@JsonCreator
 	public ProductDto() {}
 	
-	public static ProductDto fromProduct(Product product) {
-		return new ProductDto(product.getProductId(), product.getName(), PriceDto.fromPrice(product.getCurrentPrice()));
+	public static ProductDto fromProduct(Product product, Currency currency) {
+		return new ProductDto(product.getProductId(), product.getName(),
+				PriceDto.fromPrice(product.getCurrentPrice(), currency));
 	}
 }

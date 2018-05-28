@@ -23,7 +23,7 @@ curl -i --user user:myretailcasestudy -XGET http://ec2-18-218-192-245.us-east-2.
 ### Updating Price
 CSRF protection is enabled, and a `X-CSRF-TOKEN` header is sent in all `200 OK` responses. The token associated with the current session is required for `PUT` requests.
 
-1. Execute a `GET` request to get a CSRF token and initiate a session and store the cookie in cookies.txt:
+1. Execute a `GET` request to initiate a session and store the cookie in cookies.txt:
 
 ```
 curl -i \
